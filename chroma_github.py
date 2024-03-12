@@ -22,6 +22,7 @@ st.title("SkyNet\n -sky is the limit")
 st.header("How can I help you today?")
 
 class App:
+    
     def __init__(self) -> None:
         self.persist_directory = "db"
         self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
@@ -143,7 +144,7 @@ class App:
             #
             # Start chain for concrete answer
             #
-            question = f"{question}"
+            question = f"{question}(answer)"
             answer = self.qa_chain.run(input_documents=q_rs, question=question)
             st.write(answer)
 

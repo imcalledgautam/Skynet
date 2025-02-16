@@ -1,0 +1,163 @@
+import os
+
+import streamlit as st
+from dotenv import find_dotenv, load_dotenv
+from langchain.chains.question_answering import load_qa_chain
+from langchain.document_loaders import PyPDFLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chat_models import ChatOpenAI
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from loguru import logger
+from getpass import getpass
+import base64
+
+_ = load_dotenv(find_dotenv())
+
+# os.getenv('OPENAI_API_KEY')
+OPENAI_API_KEY = getpass()
+os.environ["OPENAI_API_KEY"] = "add open AI API key here"
+
+st.title("HELLO,\n How can Skynet help you today?")
+
+class App:
+    def __init__(self) -> None:
+        self.persist_directory = "db"
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+        self.vectordb = None  # Initialize the vector database attribute
+
+        self.llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0125")
+        self.qa_chain = load_qa_chain(self.llm, chain_type="stuff")
+
+        # Initialize session_state for storing chat history
+        if not hasattr(st.session_state, 'chat_history'):
+            st.session_state.chat_history = []
+
+        # Version information
+        self.version_description = "Skynet helps you find anything from your manuals."
+
+
+    def display_version_button(self):
+    # Create an empty space on the right to position the button in the top right corner
+        st.markdown("<div style='position: absolute; top: 60px; right: 60px;'></div>", unsafe_allow_html=True)
+
+    # Display the version button in the empty space
+        version_button = st.sidebar.button("Version: SkyNet-1.0", help=self.version_description, key="version_button")
+    # 
+    # New Pages
+
+
+    def load_and_split(self, path: str):
+        logger.info(f"Loading {path}")
+        loader = PyPDFLoader(path)
+        docs = loader.load()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        texts = text_splitter.split_documents(docs)
+
+        return texts
+
+    def process_pdf(self, pdf_content):
+        self.vectordb = Chroma.from_texts(
+            texts=[c.page_content for c in pdf_content],
+            embedding=self.embeddings,
+            persist_directory=self.persist_directory,
+        )
+        self.vectordb.persist()
+
+    def process_uploaded_pdf(self, uploaded_pdf):
+        temp_file = "./temp.pdf"
+        with open(temp_file, "wb") as file:
+            file.write(uploaded_pdf.getvalue())
+            file_name = uploaded_pdf.name
+            logger.info(f"Uploaded {file_name}")
+
+        pdf_content = self.load_and_split(path=temp_file)
+        self.process_pdf(pdf_content)
+
+    def pre_specified_pdfs(self):
+        # Specify pre-existing PDFs here
+        pdf_paths = ["add the text document path here"]
+        pdf_content = []
+        for pdf_path in pdf_paths:
+            pdf_content.extend(self.load_and_split(pdf_path))
+        self.process_pdf(pdf_content)
+
+    def new_chat(self, chat_entry):
+        # Add the new chat entry to the chat history
+        st.session_state.chat_history.append(chat_entry)
+
+    def display_chat_history(self):
+        st.sidebar.header("Chat History")
+        # Allow the user to select multiple chat entries
+        selected_chats = st.sidebar.multiselect("Select Chat Entries", st.session_state.chat_history)
+
+        # Display the selected chat entries
+        for i, chat_entry in enumerate(selected_chats):
+            st.subheader(f"Chat Entry {i + 1}")
+            st.write(chat_entry)
+            st.markdown("---")  # Add a separator between chat entries
+
+    def clear_chat(self):
+        # Clear the chat history
+        st.session_state.chat_history = []
+    
+    def __call__(self):
+        #
+        # Store Pre-specified PDFs in DB
+
+        self.pre_specified_pdfs()
+
+        #
+        # Store PDF file in DB (if uploaded)
+        #
+        uploaded_pdf = st.file_uploader("Upload a PDF")
+        if uploaded_pdf:
+            self.process_uploaded_pdf(uploaded_pdf)
+
+        #
+        # Prompt question, language, and optimization options
+        #
+        question = st.text_input("Ask a question")
+        if question and self.vectordb:
+            sim_methods = ["similarity_search"]
+            sim_method = sim_methods[0]
+            logger.info(f"Similarity method: {sim_method}")
+
+            m = self.vectordb.similarity_search if sim_method == sim_methods[0] else None
+
+            q_rs = m(
+                question,
+                k=1
+                # num_docs
+                # fetch_k=6,
+                # lambda_mult=1
+            )
+
+            #
+            # Start chain for concrete answer
+            #
+            question = f"{question}"
+            answer = self.qa_chain.run(input_documents=q_rs, question=question)
+            st.write(answer)
+
+            #
+            # Update chat history with the current question and answer
+            #
+            chat_entry = f"{question}\n{answer}"
+            self.new_chat(chat_entry)
+
+            #
+            # Display chat history in the sidebar
+            #
+        self.display_chat_history()
+
+        self.display_version_button()
+
+        # Clear Chat Button
+        #
+        if st.sidebar.button("Clear History"):
+            self.clear_chat()
+
+if __name__ == "__main__":
+    app = App()
+    app()

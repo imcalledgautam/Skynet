@@ -1,25 +1,62 @@
-# Skynet
-Gen Ai model for manual document search and synthesis
+# Skynet PDF Chatbot
+Gen AI model for manual document search and synthesis
 Gautam Naik (naikgautam234@gmail.com) | +1 469-990-0287
-To understand the model properly we can divide it into 2 parts.
-1.	User Interface:
-•	We have used streamlit library for user interface. 
-•	We have used “st.file_uploader” for uploading pdf file as it can handle file of the size 200MB.
-•	We have chat history option to optimize the model as well as save time.
-•	Future Changes:
-•	Can add multiple chat option for user to use multiple PDFs at same time.
-•	Have a proper structured page for Chat History.
-•	Picking points from Rajeshwari Ganesan’s talk about adding a relevance score and page numbers to show genuinity or to show that the model is not hallucinating.
 
-2.	Model:
-•	We have used OpenAI’s "text-embedding-ada-002" model for embedding the tokens.
-•	Used "gpt-3.5-turbo-0125" as it can handle upto 4k tokens.
-•	We have used “ChromaDB” for vector database storage.
-•	To connect this model with User Interface we have used Langchain library.
-•	User can upload a PDF locally also in case they want to. 
-•	Used “Similarity search” for selecting retrieval context. 
-Future Changes:
-•	We can use gpt-4 instead of gpt-3.5 to uplift performance.
-•	Can also introduce image generator.
+#Overview
 
-  
+Skynet PDF Chatbot is an AI-powered assistant that allows users to upload PDF documents and query them using natural language. The chatbot leverages OpenAI's GPT-3.5-turbo, Chroma vector database, and LangChain to retrieve and generate relevant answers based on document content.
+
+#Features
+📄 PDF Upload & Processing – Supports document uploads for AI-powered querying.
+
+🔍 Semantic Search – Uses OpenAI embeddings to find the most relevant content.
+
+🤖 AI-Powered Responses – Retrieves answers based on document context.
+
+🗂 Chat History – Stores and displays past user queries.
+
+🖥 Streamlit UI – Interactive web interface for an easy user experience.
+
+#Installation & Setup
+
+1. Clone the Repository
+   git clone https://github.com/imcalledgautam/Skynet
+   cd skynet-pdf-chatbot
+2. Usage
+Run the Application
+streamlit run test.py
+
+#Functionality Breakdown
+1. PDF Processing
+
+The app uses PyPDFLoader from LangChain to extract text from uploaded PDFs.
+It splits text into manageable chunks using RecursiveCharacterTextSplitter.
+
+2. Vector Database
+
+Uses Chroma as a persistent vector store.
+Converts PDF text into embeddings using OpenAI's text-embedding-ada-002 model.
+
+3. Question Answering
+
+Implements ChatOpenAI from LangChain for query processing.
+Retrieves relevant document sections using similarity search.
+
+4. User Interaction
+
+Built using Streamlit for an interactive UI.
+Users can upload PDFs, enter questions, and receive responses.
+Includes a chat history feature to revisit previous queries.
+
+#Known Issues & TODO
+✅ Implemented:
+
+-Basic PDF upload and querying.
+-Semantic search using OpenAI embeddings.
+-Streamlit UI with chat history.
+
+#🔜 Upcoming Improvements:
+
+-Allow users to select different similarity search methods.
+-Multi-document querying.
+-UI enhancements.

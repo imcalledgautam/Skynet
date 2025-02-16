@@ -1,5 +1,5 @@
 # Skynet PDF Chatbot
-Gen Ai model for manual document search and synthesis
+Gen AI model for manual document search and synthesis
 Gautam Naik (naikgautam234@gmail.com) | +1 469-990-0287
 
 #Overview
@@ -20,7 +20,7 @@ Skynet PDF Chatbot is an AI-powered assistant that allows users to upload PDF do
 #Installation & Setup
 
 1. Clone the Repository
-   git clone https://github.com/yourusername/skynet-pdf-chatbot.git
+   git clone https://github.com/imcalledgautam/Skynet
    cd skynet-pdf-chatbot
 2. Usage
 Run the Application
